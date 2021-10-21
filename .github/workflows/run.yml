@@ -1,0 +1,29 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - run: pip3 install -r requirements.txt
+
+      - run: python main.py
+        env:
+          CHANNEL: ${{ secrets.CHANNEL }}
+          LEADERBOARD_CHANNEL: ${{ secrets.LEADERBOARD_CHANNEL }}
+          TEXT: "The next RMRK NFT Raffle has begun! Select a pumpkin below to participate."
+          TOKEN: ${{ secrets.TOKEN }}
+
+      - name: save
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add state
+          git commit -m db_update
+          git push
