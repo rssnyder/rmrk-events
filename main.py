@@ -20,7 +20,7 @@ if __name__ == "__main__":
         channel = client.get_channel(int(getenv("CHANNEL")))
         leaderboard_channel = client.get_channel(int(getenv("LEADERBOARD_CHANNEL")))
         post = await channel.fetch_message(db["post"])
-        raffle = db["raffle"]
+        raffle = int(db["raffle"])
 
         if raffle >= 312:
             exit(1)
@@ -42,12 +42,36 @@ if __name__ == "__main__":
         if winner:
 
             # edit post to show winner
-            nfts = ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
-            nft_type = random.choices(nfts, weights=(70, 18, 8, 3.5, .5), k=1).pop()
+            if raffle == 100:
+                nft_type = "Legendary"
+            elif (raffle > 100) and (raffle < 104):
+                nft_type = "Epic"
+            elif (raffle > 149) and (raffle < 161):
+                nft_type = "Epic"
+            elif (raffle > 229) and (raffle < 241):
+                nft_type = "Epic"
+            elif raffle == 312:
+                nft_type = "Legendary"
+            else:
+                nfts = ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
+                nft_type = random.choices(
+                    nfts, weights=(70, 18, 8, 3.5, 0.5), k=1
+                ).pop()
             await post.edit(
                 content=f'Raffle #{raffle}\n\n{getenv("TEXT")}\n\nCongratulations <@{str(winner.id)}>!\nYou won a {nft_type} NFT!'
             )
-            print("winner posted")
+            print(f"winner posted: {nft_type}")
+
+            # add winnder to log
+            winners = await leaderboard_channel.fetch_message(db["winners"])
+            winners_post = winners.content + f"\n#{raffle}. {str(winner)} | {nft_type}"
+            try:
+                await winners.edit(content=winners_post)
+            except:
+                leaderboard_post = await leaderboard_channel.send(
+                    f"NFT Raffle Winners:\n#{raffle}. {str(winner)} | {nft_type}"
+                )
+                db["winners"] = leaderboard_post.id
 
             # update all the reactors scores
             try:
@@ -68,7 +92,10 @@ if __name__ == "__main__":
             if scores:
                 leaderboard = await leaderboard_channel.fetch_message(db["leaderboard"])
                 sorted_scores = {
-                    k: v for k, v in sorted(scores.items(), key=lambda item: item[1], reverse=True)
+                    k: v
+                    for k, v in sorted(
+                        scores.items(), key=lambda item: item[1], reverse=True
+                    )
                 }
                 leaderboard_text = "Current Scores:\n\n"
                 leaderboard_limit = 1
@@ -79,9 +106,7 @@ if __name__ == "__main__":
                         f"{leaderboard_limit}. {i} | {sorted_scores[i]}\n"
                     )
                     leaderboard_limit += 1
-                await leaderboard.edit(
-                    content=leaderboard_text
-                )
+                await leaderboard.edit(content=leaderboard_text)
 
         # post new message
         db["raffle"] = raffle + 1

@@ -18,20 +18,20 @@ if __name__ == "__main__":
         # get channel and post
         channel = client.get_channel(int(getenv("CHANNEL")))
         leaderboard_channel = client.get_channel(int(getenv("LEADERBOARD_CHANNEL")))
-        
+
         # make inital leaderboard post
-        leaderboard_post = await leaderboard_channel.send("HOLD")
-        db["leaderboard"] = leaderboard_post.id
+        leaderboard_post = await leaderboard_channel.send("NFT Raffle Winners:")
+        db["winners"] = leaderboard_post.id
 
         # init first raffle
-        db["raffle"] = 1
+        # db["raffle"] = 1
 
         # Make inital post
-        new_post = await channel.send(f"Raffle #1\n\n" + getenv("TEXT"))
-        db["post"] = new_post.id
-        
+        # new_post = await channel.send(f"Raffle #1\n\n" + getenv("TEXT"))
+        # db["post"] = new_post.id
+
         # empty scoreboard
-        db["scores"] = {}
+        # db["scores"] = {}
 
         db.close()
         exit(0)
