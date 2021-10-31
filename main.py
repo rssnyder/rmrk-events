@@ -1,6 +1,7 @@
 from os import getenv
 from sys import exit
 import shelve
+from secrets import choice
 import random
 
 import discord
@@ -31,34 +32,54 @@ if __name__ == "__main__":
         for reaction in post.reactions:
             if bytes(str(reaction.emoji), "utf-8") == b"\xf0\x9f\x8e\x83":
                 winning_reaction = reaction
-                reactors = await reaction.users().flatten()
+                reactors = []
+                t_reactions = await reaction.users(limit=50).flatten()
+                reactors.extend(t_reactions)
+                while len(t_reactions) == 50:
+                    t_reactions = await reaction.users(
+                        limit=50, after=t_reactions[0]
+                    ).flatten()
+                    reactors.extend(t_reactions)
+                print(len(reactors))
                 try:
                     reactors.remove(client.user)
                 except ValueError:
                     pass
-                winner = random.choice(reactors)
+                winner = choice(reactors)
+                extra_winner = ""
+                if len(reactors) > 500:
+                    extra_winner = choice(reactors)
                 print(f"winner: {winner}")
 
         if winner:
 
+            nfts = ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
             # edit post to show winner
             if raffle == 100:
                 nft_type = "Legendary"
             elif (raffle > 100) and (raffle < 104):
                 nft_type = "Epic"
-            elif (raffle > 149) and (raffle < 161):
+            elif (raffle > 149) and (raffle < 154):
                 nft_type = "Epic"
-            elif (raffle > 229) and (raffle < 241):
+            elif (raffle > 229) and (raffle < 234):
                 nft_type = "Epic"
             elif raffle == 312:
                 nft_type = "Legendary"
             else:
-                nfts = ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
                 nft_type = random.choices(
                     nfts, weights=(70, 18, 8, 3.5, 0.5), k=1
                 ).pop()
+
+            winner_text = ""
+            if extra_winner:
+                extra_nft_type = random.choices(
+                    nfts, weights=(70, 18, 8, 3.5, 0.5), k=1
+                ).pop()
+                winner_text = f"\n\nCongratulations <@{str(winner.id)}>!\nYou won a {nft_type} NFT!\nCongratulations <@{str(extra_winner.id)}>!\nYou won a {extra_nft_type} NFT!"
+            else:
+                winner_text = f"\n\nCongratulations <@{str(winner.id)}>!\nYou won a {nft_type} NFT!"
             await post.edit(
-                content=f'Raffle #{raffle}\n\n{getenv("TEXT")}\n\nCongratulations <@{str(winner.id)}>!\nYou won a {nft_type} NFT!'
+                content=f'Raffle #{raffle}\n\n{getenv("TEXT")}{winner_text}'
             )
             print(f"winner posted: {nft_type}")
 
