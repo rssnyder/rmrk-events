@@ -1,7 +1,7 @@
 from os import getenv
 from sys import exit
 import shelve
-import random
+import secrets
 
 import discord
 
@@ -36,7 +36,7 @@ if __name__ == "__main__":
                     reactors.remove(client.user)
                 except ValueError:
                     pass
-                winner = random.choice(reactors)
+                winner = secrets.choice(reactors)
                 print(f"winner: {winner}")
 
         if winner:
@@ -54,7 +54,7 @@ if __name__ == "__main__":
                 nft_type = "Legendary"
             else:
                 nfts = ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
-                nft_type = random.choices(
+                nft_type = secrets.choices(
                     nfts, weights=(70, 18, 8, 3.5, 0.5), k=1
                 ).pop()
             await post.edit(
